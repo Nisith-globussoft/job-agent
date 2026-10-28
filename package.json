@@ -1,0 +1,20 @@
+{
+  "name": "job-agent",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/server.js",
+    "scrape": "node src/cli.js run",
+    "top": "node src/cli.js top"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "ts-jobspy": "^3.0.1",
+    "unpdf": "^1.9.1"
+  }
+}

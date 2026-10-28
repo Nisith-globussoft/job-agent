@@ -1,0 +1,52 @@
+// Canonical skill -> patterns that mean it in a resume or a job description.
+export const SKILLS = {
+  'JavaScript': [/\bjavascript\b/i, /\bes6\b/i, /\bjs\b/],
+  'TypeScript': [/\btypescript\b/i, /\bts\b(?!\w)/],
+  'React': [/\breact(\.js|js)?\b(?!\s*native)/i],
+  'Node.js': [/\bnode(\.js|js)?\b/i],
+  'Express': [/\bexpress(\.js|js)?\b/i],
+  'MongoDB': [/\bmongo(db)?\b/i, /\bmongoose\b/i],
+  'MySQL': [/\bmysql\b/i],
+  'PostgreSQL': [/\bpostgres(ql)?\b/i],
+  'SQL': [/\bsql\b/i],
+  'REST APIs': [/\brest(ful)?\b/i, /\bapis?\b/i],
+  'Java': [/\bjava\b(?!\s*script)/i],
+  'Spring Boot': [/\bspring(\s*boot)?\b/i],
+  'Hibernate': [/\bhibernate\b/i, /\bjpa\b/i],
+  'JDBC': [/\bjdbc\b/i],
+  'HTML': [/\bhtml5?\b/i],
+  'CSS': [/\bcss3?\b/i],
+  'Vite': [/\bvite\b/i],
+  'Git': [/\bgit(hub)?\b/i],
+  'OAuth': [/\boauth\b/i],
+  'Postman': [/\bpostman\b/i],
+  'Vercel / Render / Netlify': [/\bvercel\b/i, /\brender\.com\b/i, /\bnetlify\b/i],
+  'MERN': [/\bmern\b/i],
+  'Axios': [/\baxios\b/i],
+  'Redux': [/\bredux\b/i],
+  'Next.js': [/\bnext(\.js|js)\b/i],
+  'Tailwind': [/\btailwind\b/i],
+  'Docker': [/\bdocker\b/i],
+  'Kubernetes': [/\bkubernetes\b/i, /\bk8s\b/i],
+  'AWS': [/\baws\b/i, /\bamazon web services\b/i],
+  'GCP': [/\bgcp\b/i, /\bgoogle cloud\b/i],
+  'Azure': [/\bazure\b/i],
+  'GraphQL': [/\bgraphql\b/i],
+  'Redis': [/\bredis\b/i],
+  'Kafka': [/\bkafka\b/i],
+  'Microservices': [/\bmicro-?services?\b/i],
+  'Python': [/\bpython\b/i],
+  'Django': [/\bdjango\b/i],
+  'Go': [/\bgolang\b/i],
+  'Angular': [/\bangular\b/i],
+  'Vue': [/\bvue(\.js|js)?\b/i],
+  'Testing (Jest etc.)': [/\bjest\b/i, /\bmocha\b/i, /\bunit test/i],
+  'CI/CD': [/\bci\s*\/\s*cd\b/i, /\bgithub actions\b/i, /\bjenkins\b/i],
+  'Data Structures & Algorithms': [/\bdata structures?\b/i, /\balgorithms?\b/i, /\bdsa\b/i],
+};
+
+export function findSkills(text) {
+  return Object.entries(SKILLS)
+    .filter(([, pats]) => pats.some((p) => p.test(text)))
+    .map(([name]) => name);
+}

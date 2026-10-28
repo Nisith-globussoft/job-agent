@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Job Agent</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--fg:#17191c;--mute:#5f6873;--line:#e2e5e9;--soft:#eef0f3;
+--acc:#2c5be0;--accs:#e7eefc;--ok:#1f7a3d;--oks:#e2f4e7;--warn:#9a6200;--warns:#fdf1d8;--bad:#b42323;--bads:#fbe6e6}
+@media (prefers-color-scheme:dark){:root{--bg:#101215;--card:#181b1f;--fg:#e7e9ec;--mute:#98a1ac;--line:#2a2f35;--soft:#20242a;
+--acc:#7ea1ff;--accs:#1d2742;--ok:#7bd597;--oks:#15301e;--warn:#f0c062;--warns:#3a2c10;--bad:#f39a9a;--bads:#3a1717}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+h1{font-size:20px;margin:0}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:0 0 10px;font-weight:600}
+.runline{color:var(--mute);flex:1;min-width:200px}
+button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:7px;padding:5px 11px;cursor:pointer}
+button:hover{border-color:var(--mute)}button:disabled{opacity:.5;cursor:default}
+button.primary{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600;padding:7px 14px}
+@media (prefers-color-scheme:dark){button.primary{color:#0b1020}}
+.grid{display:grid;gap:12px}
+.kpis{grid-template-columns:repeat(5,1fr);margin-bottom:12px}
+@media (max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.kpi .n{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}.kpi .l{color:var(--mute);font-size:12px}
+.agents{grid-template-columns:repeat(auto-fill,minmax(205px,1fr))}
+.agent .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.agent .name{font-weight:600}.agent .what{color:var(--mute);font-size:12px;margin:2px 0 8px}
+.agent .cnt{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.agent .det{color:var(--mute);font-size:12px;overflow-wrap:anywhere;min-height:17px}
+.pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--mute);white-space:nowrap}
+.pill.running{background:var(--accs);color:var(--acc)}.pill.done{background:var(--oks);color:var(--ok)}
+.pill.error{background:var(--bads);color:var(--bad)}.pill.waiting{background:var(--warns);color:var(--warn)}
+.pill.running::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:5px;animation:p 1s infinite alternate;vertical-align:1px}
+@keyframes p{to{opacity:.2}}
+.two{grid-template-columns:1fr 1fr;margin:12px 0}@media (max-width:760px){.two{grid-template-columns:1fr}}
+.bars .row{display:grid;grid-template-columns:90px 1fr 70px;gap:8px;align-items:center;margin:5px 0;font-size:13px}
+.bars .track{height:10px;background:var(--soft);border-radius:5px;position:relative;overflow:hidden}
+.bars .a{position:absolute;inset:0 auto 0 0;background:var(--line)}.bars .b{position:absolute;inset:0 auto 0 0;background:var(--acc)}
+.bars .v{text-align:right;color:var(--mute);font-variant-numeric:tabular-nums}
+.days{display:flex;align-items:flex-end;gap:4px;height:90px;margin-top:6px}
+.days div{flex:1;background:var(--acc);border-radius:3px 3px 0 0;min-height:2px;position:relative}
+.days div span{position:absolute;top:-17px;left:0;right:0;text-align:center;font-size:11px;color:var(--mute)}
+.daylbl{display:flex;justify-content:space-between;color:var(--mute);font-size:11px;margin-top:4px}
+.legend{color:var(--mute);font-size:12px;margin-top:6px}.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.rej{color:var(--mute);font-size:12px;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--mute);font-weight:600;font-size:12px;border-bottom:1px solid var(--line);padding:6px 8px}
+td{border-bottom:1px solid var(--line);padding:6px 8px;font-variant-numeric:tabular-nums;vertical-align:top}
+.scroll{overflow-x:auto}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.tabs button.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.tabs input[type=search]{flex:1;min-width:160px;font:inherit;padding:5px 10px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--fg)}
+.job{display:grid;grid-template-columns:44px 1fr auto;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.score{font-weight:700;text-align:center;border-radius:7px;padding:5px 0;background:var(--soft);height:fit-content}
+.score.hi{background:var(--oks);color:var(--ok)}.score.mid{background:var(--accs);color:var(--acc)}
+.job .t{font-weight:600;color:var(--fg);text-decoration:none}.job .t:hover{text-decoration:underline}
+.job .m{color:var(--mute);font-size:12px;overflow-wrap:anywhere}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.chips span{font-size:11px;padding:1px 7px;border-radius:99px}
+.have{background:var(--oks);color:var(--ok)}.lack{background:var(--bads);color:var(--bad)}
+.acts{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;align-content:flex-start;max-width:230px}
+.acts a{color:var(--acc);font-weight:600;text-decoration:none;padding:5px 4px}
+.st{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.st.applied{color:var(--ok)}.st.shortlisted{color:var(--acc)}.st.skipped{color:var(--mute)}
+@media (max-width:640px){.job{grid-template-columns:40px 1fr}.acts{grid-column:1/-1;justify-content:flex-start;max-width:none}}
+details{margin-top:12px}summary{cursor:pointer;color:var(--mute)}
+pre{background:var(--soft);border-radius:8px;padding:10px;max-height:300px;overflow:auto;font-size:12px;white-space:pre-wrap}
+.empty{color:var(--mute);padding:20px 0;text-align:center}
+.err{color:var(--bad)}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Job Agent</h1>
+    <div class="runline" id="runline">Loading…</div>
+    <button class="primary" id="runbtn">Run now</button>
+  </header>
+
+  <section class="grid kpis" id="kpis"></section>
+
+  <section class="card"><h2>Agents</h2><div class="grid agents" id="agents"></div>
+    <details id="logbox"><summary>Live log of the last run</summary><pre id="log"></pre></details>
+  </section>
+
+  <section class="grid two">
+    <div class="card bars"><h2>Collected and matched, by source</h2><div id="sources"></div>
+      <div class="legend"><i style="background:var(--line)"></i>collected<i style="background:var(--acc)"></i>matched</div>
+      <div class="rej" id="rejected"></div></div>
+    <div class="card"><h2>Applied, last 14 days</h2><div class="days" id="days"></div><div class="daylbl" id="daylbl"></div></div>
+  </section>
+
+  <section class="card" style="margin-bottom:12px"><h2>Runs</h2><div class="scroll"><table>
+    <thead><tr><th>Started</th><th>Trigger</th><th>Took</th><th>Fetched</th><th>New jobs</th><th>Matches</th><th>New matches</th><th>Problems</th></tr></thead>
+    <tbody id="runs"></tbody></table></div></section>
+
+  <section class="card"><h2>Jobs</h2>
+    <div class="tabs" id="tabs"></div>
+    <div id="jobs"></div>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ago = (iso) => { if (!iso) return ''; const s = (Date.now() - Date.parse(iso)) / 1000;
+  return s < 60 ? 'just now' : s < 3600 ? Math.round(s / 60) + ' min ago' : s < 86400 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' d ago'; };
+const dur = (a, b) => { if (!a || !b) return '–'; const s = Math.round((Date.parse(b) - Date.parse(a)) / 1000); return s < 60 ? s + 's' : Math.floor(s / 60) + 'm ' + (s % 60) + 's'; };
+const post = (url, body) => fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'x-job-agent': '1' }, body: JSON.stringify(body || {}) });
+
+let S = null, tab = 'new', q = '', jobsKey = '';
+
+function render() {
+  const { status, stats, runs } = S;
+  const last = runs[0];
+  $('runline').innerHTML = status.running
+    ? `<b>Running</b> since ${ago(status.startedAt)}`
+    : last ? `Last run ${ago(last.finishedAt)} · ${last.newMatches ?? 0} new matches${last.failed ? ' · <span class="err">failed</span>' : ''}` : 'No run yet';
+  $('runbtn').disabled = status.running;
+  $('runbtn').textContent = status.running ? 'Running…' : 'Run now';
+
+  const k = [['Collected', stats.collected], ['Matches', stats.matches], ['New today', stats.newToday],
+    ['Shortlisted', stats.byStatus.shortlisted], ['Applied', stats.byStatus.applied]];
+  $('kpis').innerHTML = k.map(([l, n]) => `<div class="card kpi"><div class="n">${n.toLocaleString('en-IN')}</div><div class="l">${l}</div></div>`).join('');
+
+  $('agents').innerHTML = Object.entries(status.agents).map(([id, a]) => `
+    <div class="card agent"><div class="top"><span class="name">${esc(a.name)}</span><span class="pill ${a.state}">${a.state}</span></div>
+    <div class="what">${esc(a.what)}</div>
+    <div class="cnt">${a.planned ? '–' : (a.count ?? 0).toLocaleString('en-IN')}</div>
+    <div class="det">${esc(a.detail || '')}${a.updatedAt ? ' · ' + ago(a.updatedAt) : ''}</div></div>`).join('');
+
+  const src = Object.entries(stats.bySource).sort((a, b) => b[1].collected - a[1].collected);
+  const max = Math.max(1, ...src.map(([, v]) => v.collected));
+  $('sources').innerHTML = src.map(([s, v]) => `<div class="row"><span>${esc(s)}</span>
+    <div class="track"><div class="a" style="width:${100 * v.collected / max}%"></div><div class="b" style="width:${100 * v.matches / max}%"></div></div>
+    <span class="v">${v.matches} / ${v.collected}</span></div>`).join('') || '<div class="empty">Nothing collected yet</div>';
+  const rej = Object.entries(stats.rejected).sort((a, b) => b[1] - a[1]);
+  $('rejected').textContent = rej.length ? 'Dropped: ' + rej.map(([r, n]) => `${r} ${n}`).join(' · ') : '';
+
+  const days = Object.entries(stats.appliedByDay), dmax = Math.max(1, ...days.map(([, n]) => n));
+  $('days').innerHTML = days.map(([d, n]) => `<div title="${d}: ${n}" style="height:${Math.max(2, 100 * n / dmax)}%">${n ? `<span>${n}</span>` : ''}</div>`).join('');
+  $('daylbl').innerHTML = `<span>${days[0][0].slice(5)}</span><span>today</span>`;
+
+  $('runs').innerHTML = runs.map((r) => `<tr><td>${new Date(r.startedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</td>
+    <td>${esc(r.trigger)}</td><td>${dur(r.startedAt, r.finishedAt)}</td><td>${r.fetched ?? '–'}</td><td>${r.added ?? '–'}</td>
+    <td>${r.matches ?? '–'}</td><td>${r.newMatches ?? '–'}</td><td class="${r.errors?.length ? 'err' : ''}">${r.errors?.length ? esc(r.errors.join('; ').slice(0, 160)) : '–'}</td></tr>`).join('')
+    || '<tr><td colspan="8" class="empty">No runs yet. Press Run now.</td></tr>';
+
+  renderJobs();
+}
+
+function renderJobs() {
+  const counts = { new: 0, shortlisted: 0, applied: 0, skipped: 0 };
+  for (const j of S.jobs) counts[j.status]++;
+  const tabs = [['new', 'To review'], ['shortlisted', 'Shortlisted'], ['applied', 'Applied'], ['skipped', 'Skipped'], ['all', 'All']];
+  $('tabs').innerHTML = tabs.map(([t, l]) => `<button data-tab="${t}" class="${t === tab ? 'on' : ''}">${l} ${t === 'all' ? S.jobs.length : counts[t]}</button>`).join('')
+    + `<input type="search" id="q" placeholder="Search title, company, city, skill" value="${esc(q)}">`;
+  $('q').oninput = (e) => { q = e.target.value; drawList(); };
+  document.querySelectorAll('[data-tab]').forEach((b) => b.onclick = () => { tab = b.dataset.tab; renderJobs(); });
+  drawList();
+}
+
+function drawList() {
+  const ql = q.toLowerCase();
+  const list = S.jobs.filter((j) => (tab === 'all' || j.status === tab) &&
+    (!ql || [j.title, j.company, j.location, ...(j.matched || []), ...(j.sources || [])].join(' ').toLowerCase().includes(ql)));
+  const key = tab + '|' + q + '|' + list.map((j) => j.id + j.status).join();
+  if (key === jobsKey) return;
+  jobsKey = key;
+  const btn = (j, s, l) => j.status === s ? '' : `<button data-id="${j.id}" data-s="${s}">${l}</button>`;
+  $('jobs').innerHTML = list.slice(0, 300).map((j) => `
+    <div class="job"><div class="score ${j.score >= 75 ? 'hi' : j.score >= 55 ? 'mid' : ''}">${j.score}</div>
+    <div><a class="t" href="${esc(j.url)}" target="_blank" rel="noopener">${esc(j.title)}</a>
+      ${j.status !== 'new' ? `<span class="st ${j.status}"> · ${j.status}${j.appliedOn ? ' ' + j.appliedOn : ''}</span>` : ''}
+      <div class="m">${esc(j.company || 'Company not listed')} · ${esc(j.location)} · ${esc((j.sources || []).join(', '))}${j.posted ? ' · posted ' + esc(j.posted) : ''}</div>
+      <div class="m">${esc((j.reasons || []).join(' · '))}</div>
+      <div class="chips">${(j.matched || []).map((s) => `<span class="have">${esc(s)}</span>`).join('')}${(j.missing || []).map((s) => `<span class="lack">${esc(s)}</span>`).join('')}</div></div>
+    <div class="acts"><a href="${esc(j.applyUrl)}" target="_blank" rel="noopener">Apply ↗</a>
+      ${btn(j, 'applied', 'Applied')}${btn(j, 'shortlisted', 'Shortlist')}${btn(j, 'skipped', 'Skip')}${j.status !== 'new' ? btn(j, 'new', 'Undo') : ''}</div></div>`).join('')
+    || '<div class="empty">Nothing here.</div>';
+  if (list.length > 300) $('jobs').insertAdjacentHTML('beforeend', `<div class="empty">Showing 300 of ${list.length}. Search to narrow it.</div>`);
+}
+
+$('jobs').onclick = async (e) => {
+  const b = e.target.closest('button[data-id]');
+  if (!b) return;
+  b.disabled = true;
+  const r = await post('/api/jobs/' + b.dataset.id, { status: b.dataset.s });
+  if (!r.ok) alert('Could not save: ' + (await r.text()));
+  await load();
+};
+
+$('runbtn').onclick = async () => {
+  const r = await post('/api/run');
+  if (!r.ok) alert((await r.json()).error);
+  $('logbox').open = true;
+  await load();
+};
+
+let timer;
+async function load() {
+  clearTimeout(timer);
+  try {
+    S = await (await fetch('/api/state')).json();
+    render();
+    if ($('logbox').open) $('log').textContent = await (await fetch('/api/log')).text() || 'No log yet.';
+  } catch (e) {
+    $('runline').innerHTML = '<span class="err">Dashboard server is not answering. Start it with: node src/server.js</span>';
+  }
+  timer = setTimeout(load, S?.status?.running ? 2500 : 15000);
+}
+$('logbox').ontoggle = load;
+load();
+</script>
+</body>
+</html>
