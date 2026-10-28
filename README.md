@@ -15,6 +15,18 @@ node src/cli.js rescore      # after editing config.json, without fetching again
 
 Open `data/report.html` in a browser.
 
+## Dashboard
+
+```bash
+npm start                    # http://localhost:4317
+```
+
+Shows each agent live (running / waiting / done / error / planned) with its count, the totals
+(collected, matches, new today, shortlisted, applied), collected vs matched per source, why jobs
+were dropped, applications per day, every run, and the job list with Apply / Applied / Shortlist /
+Skip. "Run now" starts a run in the background and the page follows it. It listens on
+127.0.0.1 only.
+
 ## Sources
 
 | Source | How | Notes |
