@@ -27,6 +27,29 @@ were dropped, applications per day, every run, and the job list with Apply / App
 Skip. "Run now" starts a run in the background and the page follows it. It listens on
 127.0.0.1 only.
 
+## Applier
+
+Press **Auto-fill** (or **Open + fill**) on a job in the dashboard, or run
+`node src/apply.js <job id>`. Chrome opens with its own profile (`data/browser-profile`, not your
+everyday Chrome) and:
+
+- fills name, email, phone, location, links, education, work authorization, country, resume upload
+  and the common questions from `data/profile.json` (outside git; start from `profile.example.json`);
+- picks "decline" on equal-opportunity questions when the form offers it;
+- outlines in yellow whatever it left for you, and never ticks a consent / "I agree" box;
+- watches every tab, so a company form reached through "Apply on company site" gets filled when it
+  appears; LinkedIn, Indeed, Naukri and Glassdoor's own forms are never filled;
+- **never presses Submit.** When the thank-you page shows, the job is marked applied, and what you
+  typed into questions it could not answer is saved in `data/answers.json` for the next form.
+
+Every attempt is logged in `data/applications.json`. Fill `noticePeriod`, `currentCtc` and
+`expectedCtc` in `data/profile.json` to stop being asked for them.
+
+```bash
+node src/apply.js --test <form url>...   # fill real forms with a fake profile, headless, screenshots, no submit
+npm test                                 # end-to-end check against a local fixture form
+```
+
 ## Sources
 
 | Source | How | Notes |

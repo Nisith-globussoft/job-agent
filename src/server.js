@@ -7,6 +7,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import * as store from './store.js';
 import { readStatus, readRuns } from './status.js';
+import { formUrl } from './apply/fill.js';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 process.chdir(ROOT);
@@ -49,6 +50,7 @@ function state() {
       id: j.id, title: j.title, company: j.company, location: j.location, sources: j.sources,
       posted: j.posted, firstSeen: j.firstSeen, url: j.url, applyUrl: j.applyUrl, score: j.score,
       reasons: j.reasons, matched: j.matched, missing: j.missing, status: j.status, appliedOn: j.appliedOn,
+      fillable: !!formUrl(j) || !/(linkedin|indeed|naukri|glassdoor)\./i.test(j.applyUrl || ''),
     }));
 
   return {
@@ -62,6 +64,14 @@ function state() {
     },
     jobs,
   };
+}
+
+function startApply(id) {
+  const ap = readStatus().agents.applier;
+  if (ap.state === 'running' || ap.state === 'waiting') return 'The applier is busy with another job: submit or close that window first.';
+  const out = fs.openSync('data/last-apply.log', 'w');
+  spawn(process.execPath, ['src/apply.js', id], { cwd: ROOT, stdio: ['ignore', out, out], detached: true }).unref();
+  return null;
 }
 
 function startRun() {
@@ -95,6 +105,12 @@ http.createServer(async (req, res) => {
       // Only this page sends the header; another site would need a CORS preflight this server never grants.
       if (req.headers['x-job-agent'] !== '1') return send(res, 403, { error: 'forbidden' });
       if (url.pathname === '/api/run') return startRun() ? send(res, 202, { started: true }) : send(res, 409, { error: 'a run is already going' });
+      const a = url.pathname.match(/^\/api\/apply\/([0-9a-f]{12})$/);
+      if (a) {
+        if (!store.load()[a[1]]) return send(res, 404, { error: 'no such job' });
+        const busy = startApply(a[1]);
+        return busy ? send(res, 409, { error: busy }) : send(res, 202, { started: true });
+      }
       const m = url.pathname.match(/^\/api\/jobs\/([0-9a-f]{12})$/);
       if (m) {
         const { status } = await readBody(req);

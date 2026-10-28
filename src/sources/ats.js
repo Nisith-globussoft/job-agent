@@ -16,7 +16,8 @@ async function greenhouse(board) {
     location: j.location?.name || '',
     remote: /remote/i.test(j.location?.name || ''),
     url: j.absolute_url,
-    applyUrl: j.absolute_url,
+    applyUrl: `https://job-boards.greenhouse.io/${board}/jobs/${j.id}`,
+    form: { ats: 'greenhouse', board, id: String(j.id) },
     posted: (j.first_published || j.updated_at || '').slice(0, 10) || null,
     description: htmlToText(j.content || ''),
   }));
@@ -34,7 +35,8 @@ async function lever(board) {
       location: [...new Set(locs)].join(' / '),
       remote: j.workplaceType === 'remote',
       url: j.hostedUrl,
-      applyUrl: j.applyUrl || j.hostedUrl,
+      applyUrl: j.applyUrl || `${j.hostedUrl}/apply`,
+      form: { ats: 'lever', board, id: j.id },
       posted: j.createdAt ? new Date(j.createdAt).toISOString().slice(0, 10) : null,
       description: `${j.descriptionPlain || ''}\n${lists}\n${j.additionalPlain || ''}`,
     };
@@ -50,7 +52,8 @@ async function ashby(board) {
     location: [j.location, ...(j.secondaryLocations || []).map((s) => s.location)].filter(Boolean).join(' / '),
     remote: !!j.isRemote,
     url: j.jobUrl,
-    applyUrl: j.applyUrl || j.jobUrl,
+    applyUrl: j.applyUrl || `${j.jobUrl}/application`,
+    form: { ats: 'ashby', board, id: j.id },
     posted: (j.publishedAt || '').slice(0, 10) || null,
     description: j.descriptionPlain || htmlToText(j.descriptionHtml || ''),
   }));

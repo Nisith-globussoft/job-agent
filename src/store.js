@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { norm } from './text.js';
+import { writeJsonAtomic } from './fsx.js';
 
 const FILE = 'data/jobs.json';
 
@@ -21,8 +22,7 @@ export function save(db) {
       Object.assign(mine, { status: disk.status, appliedOn: disk.appliedOn, history: disk.history });
     }
   }
-  fs.writeFileSync(FILE + '.tmp', JSON.stringify(db, null, 1));
-  fs.renameSync(FILE + '.tmp', FILE);
+  writeJsonAtomic(FILE, db);
 }
 
 export const STATUSES = ['new', 'shortlisted', 'applied', 'skipped'];
@@ -41,10 +41,15 @@ export function merge(db, jobs, today) {
     const id = jobKey(j);
     const old = db[id];
     if (!old) added++;
-    // Keep the longer description when the same posting arrives from two sources.
-    const keep = old && (old.description || '').length > (j.description || '').length ? old : j;
+    // Newest fields win, but keep the longer description and any known form link
+    // when the same posting arrives from two sources.
+    const longer = old && (old.description || '').length > (j.description || '').length ? old : j;
     db[id] = {
-      ...keep,
+      ...old,
+      ...j,
+      description: longer.description,
+      form: j.form || old?.form,
+      applyUrl: j.form ? j.applyUrl : old?.form ? old.applyUrl : j.applyUrl,
       id,
       sources: [...new Set([...(old?.sources || []), j.source])],
       firstSeen: old?.firstSeen || today,

@@ -16,21 +16,110 @@
     "location": "India",
     "country": "india",
     "hoursOld": 168,
-    "jobspySites": ["indeed", "linkedin"],
+    "jobspySites": [
+      "indeed",
+      "linkedin"
+    ],
     "resultsPerSite": 30,
     "linkedinDescriptions": true
   },
   "locations": {
-    "accept": ["india", "bengaluru", "bangalore", "mumbai", "pune", "hyderabad", "delhi", "new delhi", "gurgaon", "gurugram", "noida", "chennai", "kolkata", "ahmedabad", "jaipur", "kochi", "indore", "bhubaneswar", "chandigarh", "coimbatore", "remote"],
-    "rejectIfOnly": ["united states", "usa", "canada", "united kingdom", "uk", "europe", "germany", "ireland", "netherlands", "australia", "singapore", "japan", "brazil", "mexico", "poland", "spain", "france", "israel"]
+    "accept": [
+      "india",
+      "bengaluru",
+      "bangalore",
+      "mumbai",
+      "pune",
+      "hyderabad",
+      "delhi",
+      "new delhi",
+      "gurgaon",
+      "gurugram",
+      "noida",
+      "chennai",
+      "kolkata",
+      "ahmedabad",
+      "jaipur",
+      "kochi",
+      "indore",
+      "bhubaneswar",
+      "chandigarh",
+      "coimbatore",
+      "remote"
+    ],
+    "rejectIfOnly": [
+      "united states",
+      "usa",
+      "canada",
+      "united kingdom",
+      "uk",
+      "europe",
+      "germany",
+      "ireland",
+      "netherlands",
+      "australia",
+      "singapore",
+      "japan",
+      "brazil",
+      "mexico",
+      "poland",
+      "spain",
+      "france",
+      "israel"
+    ]
   },
   "ats": {
     "maxAgeDays": 45,
-    "greenhouse": ["okta", "databricks", "mongodb", "highradius", "stripe", "inmobi", "gitlab", "razorpaysoftwareprivatelimited", "elastic", "hackerrank", "agoda", "druva", "groww", "coinbase", "twilio", "turing", "coursera", "observeai", "figma", "groupon", "thoughtworks", "vercel"],
-    "lever": ["paytm", "meesho", "zeta", "fampay", "mindtickle", "cred", "pocketfm"],
-    "ashby": ["tekion", "sarvam", "plane", "spotdraft", "atlan", "supabase", "notion", "composio", "sardine"]
+    "greenhouse": [
+      "okta",
+      "databricks",
+      "mongodb",
+      "highradius",
+      "stripe",
+      "inmobi",
+      "gitlab",
+      "razorpaysoftwareprivatelimited",
+      "elastic",
+      "hackerrank",
+      "agoda",
+      "druva",
+      "groww",
+      "coinbase",
+      "twilio",
+      "turing",
+      "coursera",
+      "observeai",
+      "figma",
+      "groupon",
+      "thoughtworks",
+      "vercel"
+    ],
+    "lever": [
+      "paytm",
+      "meesho",
+      "zeta",
+      "fampay",
+      "mindtickle",
+      "cred",
+      "pocketfm"
+    ],
+    "ashby": [
+      "tekion",
+      "sarvam",
+      "plane",
+      "spotdraft",
+      "atlan",
+      "supabase",
+      "notion",
+      "composio",
+      "sardine"
+    ]
   },
   "report": {
     "minScore": 40
+  },
+  "applier": {
+    "browser": "chrome",
+    "profile": "data/profile.json"
   }
 }

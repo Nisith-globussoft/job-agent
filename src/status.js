@@ -1,9 +1,11 @@
 // data/status.json: what each agent is doing right now, read by the dashboard.
 // data/runs.json: one record per finished run (newest last).
 import fs from 'node:fs';
+import { writeJsonAtomic } from './fsx.js';
 
 const STATUS = 'data/status.json';
 const RUNS = 'data/runs.json';
+const APPLIER = 'data/applier.json';
 
 export const AGENTS = {
   ats: { name: 'Company boards', what: 'Greenhouse, Lever, Ashby' },
@@ -11,14 +13,11 @@ export const AGENTS = {
   linkedin: { name: 'LinkedIn jobs', what: 'Guest listings, no login' },
   naukri: { name: 'Naukri', what: 'Blocked by Naukri (HTTP 406)', planned: true },
   matcher: { name: 'Matcher', what: 'Scores jobs against your resume' },
-  applier: { name: 'Applier', what: 'Fills forms, you press submit', planned: true },
+  applier: { name: 'Applier', what: 'Fills forms, you press submit' },
   referrals: { name: 'Referral mailer', what: 'Drafts referral emails for approval', planned: true },
 };
 
-const writeJson = (file, data) => {
-  fs.writeFileSync(file + '.tmp', JSON.stringify(data, null, 1));
-  fs.renameSync(file + '.tmp', file);
-};
+const writeJson = writeJsonAtomic;
 const readJson = (file, dflt) => {
   try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return dflt; }
 };
@@ -32,7 +31,27 @@ export function readStatus() {
   for (const [id, a] of Object.entries(AGENTS)) {
     s.agents[id] = { ...a, state: a.planned ? 'planned' : 'idle', ...s.agents[id] };
   }
+  // The applier runs on its own, so it keeps its own file.
+  const ap = readJson(APPLIER, null);
+  if (ap) {
+    if ((ap.state === 'running' || ap.state === 'waiting') && ap.pid) {
+      try { process.kill(ap.pid, 0); } catch { Object.assign(ap, { state: 'idle', detail: 'stopped' }); }
+    }
+    s.agents.applier = { ...s.agents.applier, ...ap, count: ap.applied || 0 };
+  }
   return s;
+}
+
+export function readApplier() {
+  return readJson(APPLIER, {});
+}
+
+export function setApplier(patch) {
+  const cur = readJson(APPLIER, { applied: 0 });
+  const next = { ...cur, ...patch, updatedAt: new Date().toISOString() };
+  if (patch.state === 'done') next.applied = (cur.applied || 0) + 1;
+  if (patch.state !== 'running' && patch.state !== 'waiting') delete next.pid;
+  writeJson(APPLIER, next);
 }
 
 export const readRuns = () => readJson(RUNS, []);
@@ -42,7 +61,8 @@ export class Run {
     this.record = { id: new Date().toISOString(), trigger, startedAt: new Date().toISOString(), sources: {}, errors: [] };
     this.status = { running: true, pid: process.pid, runId: this.record.id, startedAt: this.record.startedAt, agents: {} };
     for (const id of Object.keys(AGENTS)) {
-      this.status.agents[id] = { state: AGENTS[id].planned ? 'planned' : 'waiting', count: 0, detail: '' };
+      if (id === 'applier') continue;
+      this.status.agents[id] ={ state: AGENTS[id].planned ? 'planned' : 'waiting', count: 0, detail: '' };
     }
     this.flush();
   }

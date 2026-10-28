@@ -61,6 +61,8 @@ td{border-bottom:1px solid var(--line);padding:6px 8px;font-variant-numeric:tabu
 .chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.chips span{font-size:11px;padding:1px 7px;border-radius:99px}
 .have{background:var(--oks);color:var(--ok)}.lack{background:var(--bads);color:var(--bad)}
 .acts{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;align-content:flex-start;max-width:230px}
+.acts .fill{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+@media (prefers-color-scheme:dark){.acts .fill{color:#0b1020}}
 .acts a{color:var(--acc);font-weight:600;text-decoration:none;padding:5px 4px}
 .st{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 .st.applied{color:var(--ok)}.st.shortlisted{color:var(--acc)}.st.skipped{color:var(--mute)}
@@ -117,6 +119,8 @@ function render() {
   $('runline').innerHTML = status.running
     ? `<b>Running</b> since ${ago(status.startedAt)}`
     : last ? `Last run ${ago(last.finishedAt)} · ${last.newMatches ?? 0} new matches${last.failed ? ' · <span class="err">failed</span>' : ''}` : 'No run yet';
+  const ap = status.agents.applier;
+  if (ap && (ap.state === 'running' || ap.state === 'waiting')) $('runline').innerHTML += ` · <b>Applier:</b> ${esc(ap.detail)}`;
   $('runbtn').disabled = status.running;
   $('runbtn').textContent = status.running ? 'Running…' : 'Run now';
 
@@ -176,13 +180,21 @@ function drawList() {
       <div class="m">${esc(j.company || 'Company not listed')} · ${esc(j.location)} · ${esc((j.sources || []).join(', '))}${j.posted ? ' · posted ' + esc(j.posted) : ''}</div>
       <div class="m">${esc((j.reasons || []).join(' · '))}</div>
       <div class="chips">${(j.matched || []).map((s) => `<span class="have">${esc(s)}</span>`).join('')}${(j.missing || []).map((s) => `<span class="lack">${esc(s)}</span>`).join('')}</div></div>
-    <div class="acts"><a href="${esc(j.applyUrl)}" target="_blank" rel="noopener">Apply ↗</a>
+    <div class="acts">${j.status !== 'applied' ? `<button class="fill" data-fill="${j.id}" title="${j.fillable ? 'Opens the form in Chrome and fills it; you press Submit' : 'Opens the job in Chrome; when you go on to the company form it gets filled. Job-board forms are never filled'}">${j.fillable ? 'Auto-fill' : 'Open + fill'}</button>` : ''}<a href="${esc(j.applyUrl)}" target="_blank" rel="noopener">Open ↗</a>
       ${btn(j, 'applied', 'Applied')}${btn(j, 'shortlisted', 'Shortlist')}${btn(j, 'skipped', 'Skip')}${j.status !== 'new' ? btn(j, 'new', 'Undo') : ''}</div></div>`).join('')
     || '<div class="empty">Nothing here.</div>';
   if (list.length > 300) $('jobs').insertAdjacentHTML('beforeend', `<div class="empty">Showing 300 of ${list.length}. Search to narrow it.</div>`);
 }
 
 $('jobs').onclick = async (e) => {
+  const fb = e.target.closest('button[data-fill]');
+  if (fb) {
+    fb.disabled = true;
+    fb.textContent = 'Opening…';
+    const r = await post('/api/apply/' + fb.dataset.fill);
+    if (!r.ok) { alert((await r.json()).error); fb.disabled = false; fb.textContent = 'Auto-fill'; }
+    return load();
+  }
   const b = e.target.closest('button[data-id]');
   if (!b) return;
   b.disabled = true;
@@ -208,7 +220,8 @@ async function load() {
   } catch (e) {
     $('runline').innerHTML = '<span class="err">Dashboard server is not answering. Start it with: node src/server.js</span>';
   }
-  timer = setTimeout(load, S?.status?.running ? 2500 : 15000);
+  const ap = S?.status?.agents?.applier?.state;
+  timer = setTimeout(load, S?.status?.running || ap === 'running' || ap === 'waiting' ? 2500 : 15000);
 }
 $('logbox').ontoggle = load;
 load();

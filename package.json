@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node test/applier.test.mjs",
     "start": "node src/server.js",
     "scrape": "node src/cli.js run",
     "top": "node src/cli.js top"
@@ -14,6 +14,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "playwright-core": "^1.64.1",
     "ts-jobspy": "^3.0.1",
     "unpdf": "^1.9.1"
   }
